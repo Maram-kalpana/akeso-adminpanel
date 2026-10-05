@@ -1,0 +1,10 @@
+export { default as authApi } from './auth';
+export { default as dashboardApi } from './dashboard';
+export { default as hospitalsApi } from './hospitals';
+export { default as specialitiesApi } from './specialities';
+export { default as servicesApi } from './services';
+export { default as doctorsApi } from './doctors';
+export { default as healthLibraryApi } from './healthLibrary';
+export { default as storiesApi } from './stories';
+export { default as blogsApi } from './blogs';
+export { default as faqsApi } from './faqs';
