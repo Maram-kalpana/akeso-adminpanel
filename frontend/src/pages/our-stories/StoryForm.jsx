@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Drawer from '../../components/Drawer';
 import { specialitiesApi, storiesApi } from '../../api';
-import { toFormData } from '../../api/client';
+// import { toFormData } from '../../api/client';
 
 const empty = {
   patient_name: '',
@@ -42,22 +42,41 @@ export default function StoryForm({ open, id, onClose, onSaved }) {
   }
 
   async function onSubmit(e) {
-    e.preventDefault();
-    if (!form.patient_name) {
-      setError('Name is required');
-      return;
-    }
-    try {
-      const payload = toFormData(form);
-      if (id) await storiesApi.update(id, payload);
-      else await storiesApi.create(payload);
-      toast.success(id ? 'Story updated' : 'Story created');
-      onSaved?.();
-      onClose();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Save failed');
-    }
+  e.preventDefault();
+
+  if (!form.patient_name.trim()) {
+    setError('Name is required');
+    return;
   }
+
+  setError('');
+
+  try {
+    const payload = {
+      patient_name: form.patient_name.trim(),
+      speciality_id: form.speciality_id || null,
+      video_url: form.video_url.trim() || null,
+    };
+
+    if (id) {
+      await storiesApi.update(id, payload);
+    } else {
+      await storiesApi.create(payload);
+    }
+
+    toast.success(
+      id ? 'Story updated' : 'Story created'
+    );
+
+    onSaved?.();
+    onClose();
+  } catch (err) {
+    toast.error(
+      err.response?.data?.message ||
+      'Save failed'
+    );
+  }
+}
 
   return (
     <Drawer open={open} title={id ? 'Edit story' : 'Add story'} onClose={onClose}>

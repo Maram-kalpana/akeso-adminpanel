@@ -99,3 +99,55 @@ exports.remove = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.getBySlug = async (req, res, next) => {
+  try {
+    const row =
+      await Speciality.findPublicDetailsBySlug(
+        req.params.slug
+      );
+
+    if (!row) {
+      return res.status(404).json({
+        success: false,
+        message: 'Speciality not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: row,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+exports.getPublicDetails = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const row =
+      await Speciality.findPublicDetailsBySlug(
+        req.params.slug
+      );
+
+    if (!row) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'Speciality not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: row,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

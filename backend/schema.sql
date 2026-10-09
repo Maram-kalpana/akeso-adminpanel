@@ -290,3 +290,77 @@ CREATE TABLE IF NOT EXISTS speciality_technologies (
   CONSTRAINT fk_stech_speciality FOREIGN KEY (speciality_id) REFERENCES specialities(id) ON DELETE CASCADE,
   CONSTRAINT fk_stech_technology FOREIGN KEY (technology_id) REFERENCES technologies(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+
+
+
+CREATE TABLE IF NOT EXISTS customers (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+  name VARCHAR(160) NOT NULL,
+  email VARCHAR(190) NOT NULL UNIQUE,
+  phone VARCHAR(40) NOT NULL,
+
+  password VARCHAR(255) DEFAULT NULL,
+
+  status ENUM(
+    'pending',
+    'active',
+    'blocked'
+  ) NOT NULL DEFAULT 'pending',
+
+  email_verified_at DATETIME DEFAULT NULL,
+
+  activation_token_hash VARCHAR(64) DEFAULT NULL,
+  activation_token_expires_at DATETIME DEFAULT NULL,
+
+  reset_token_hash VARCHAR(64) DEFAULT NULL,
+  reset_token_expires_at DATETIME DEFAULT NULL,
+
+  last_login_at DATETIME DEFAULT NULL,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  updated_at TIMESTAMP
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+
+  INDEX idx_customer_email (email),
+  INDEX idx_activation_token (activation_token_hash),
+  INDEX idx_reset_token (reset_token_hash)
+) ENGINE=InnoDB;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Run ONCE in hospital_cms; existing blogs are preserved.
+-- ALTER TABLE blogs ADD COLUMN speciality_id INT UNSIGNED NULL AFTER category;
+-- ALTER TABLE blogs ADD COLUMN short_description TEXT NULL AFTER content;
+-- ALTER TABLE blogs ADD INDEX idx_blogs_speciality (speciality_id);
+
+
+CREATE TABLE IF NOT EXISTS case_studies (
+ id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ title VARCHAR(220) NOT NULL, slug VARCHAR(240) NOT NULL UNIQUE,
+ thumbnail VARCHAR(255) NULL, speciality_id INT UNSIGNED NULL,
+ short_description TEXT NULL, content LONGTEXT NULL,
+ is_published TINYINT(1) NOT NULL DEFAULT 1,
+ published_at DATETIME NULL,
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ KEY idx_case_speciality (speciality_id), KEY idx_case_published (is_published,created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

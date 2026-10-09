@@ -3,8 +3,11 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+
 const authMiddleware = require('./middleware/auth.middleware');
 const errorMiddleware = require('./middleware/error.middleware');
+const customerAuthRoutes =
+  require("./routes/customerAuth.routes");
 
 const authRoutes = require('./routes/auth.routes');
 const hospitalRoutes = require('./routes/hospital.routes');
@@ -14,6 +17,7 @@ const doctorRoutes = require('./routes/doctor.routes');
 const healthLibraryRoutes = require('./routes/healthLibrary.routes');
 const storyRoutes = require('./routes/story.routes');
 const blogRoutes = require('./routes/blog.routes');
+const editorialRoutes = require('./routes/editorial.routes');
 const faqRoutes = require('./routes/faq.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 
@@ -29,15 +33,36 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use(
+  "/api/customer-auth",
+  customerAuthRoutes
+);
+
+app.use('/api/doctors', doctorRoutes);
+app.use('/api/specialities', specialityRoutes);
+// app.use('/api/our-stories', storyRoutes);
+app.get(
+  '/api/public/our-stories',
+  require('./controllers/story.controller').list
+);
+
+app.get('/api/public/editorial/:kind', (req,res,next) => { req.query.public='1'; require('./controllers/editorial.controller').list(req,res,next); });
+app.get('/api/public/editorial/:kind/:id', (req,res,next) => { req.query.public='1'; require('./controllers/editorial.controller').getOne(req,res,next); });
+app.use('/api/faqs', faqRoutes);
+
 app.use('/api', authMiddleware);
 app.use('/api/hospitals', hospitalRoutes);
-app.use('/api/specialities', specialityRoutes);
+
+// app.use('/api/specialities', specialityRoutes);
 app.use('/api/services', serviceRoutes);
-app.use('/api/doctors', doctorRoutes);
+// app.use('/api/doctors', doctorRoutes);
 app.use('/api/health-library', healthLibraryRoutes);
 app.use('/api/our-stories', storyRoutes);
+
 app.use('/api/blogs', blogRoutes);
-app.use('/api/faqs', faqRoutes);
+app.use('/api/editorial', editorialRoutes);
+
+// app.use('/api/faqs', faqRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 app.use((req, res) => {

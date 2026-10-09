@@ -55,6 +55,10 @@ const Speciality = {
     };
   },
 
+
+
+
+
   async create(data) {
     const conn = await db.getConnection();
     try {
@@ -143,6 +147,128 @@ const Speciality = {
       );
     }
   },
+
+
+async findPublicDetailsBySlug(slug) {
+  /* =========================================
+     SPECIALITY MAIN DATA
+  ========================================= */
+
+  const [rows] = await db.query(
+    `SELECT *
+     FROM specialities
+     WHERE slug = ?
+       AND is_active = 1
+     LIMIT 1`,
+    [slug]
+  );
+
+  const row = rows[0];
+
+  if (!row) {
+    return null;
+  }
+
+  const specialityId = row.id;
+
+
+  /* =========================================
+     RELATED DATA
+     Run queries parallel for better performance
+  ========================================= */
+
+  const [
+    [highlights],
+    [subspecialities],
+    [ailments],
+    [stories],
+  ] = await Promise.all([
+
+    /* HIGHLIGHTS */
+    db.query(
+      `SELECT
+         id,
+         highlight_text,
+         sort_order
+       FROM speciality_highlights
+       WHERE speciality_id = ?
+       ORDER BY sort_order ASC, id ASC`,
+      [specialityId]
+    ),
+
+
+    /* SUB SPECIALITIES */
+    db.query(
+      `SELECT
+         id,
+         name,
+         slug,
+         sort_order
+       FROM speciality_subspecialities
+       WHERE speciality_id = ?
+       ORDER BY sort_order ASC, id ASC`,
+      [specialityId]
+    ),
+
+
+    /* AILMENTS */
+    db.query(
+      `SELECT
+         id,
+         name,
+         sort_order
+       FROM speciality_ailment_items
+       WHERE speciality_id = ?
+       ORDER BY sort_order ASC, id ASC`,
+      [specialityId]
+    ),
+
+
+    /* OUR STORIES */
+    db.query(
+      `SELECT
+         id,
+         patient_name,
+         title,
+         slug,
+         speciality_id,
+         video_url,
+         created_at
+       FROM our_stories
+       WHERE speciality_id = ?
+         AND is_published = 1
+       ORDER BY created_at DESC`,
+      [specialityId]
+    ),
+  ]);
+
+
+  /* =========================================
+     FINAL USER-SIDE RESPONSE
+  ========================================= */
+
+  return {
+    ...row,
+
+    highlights:
+      highlights.map(
+        (item) =>
+          item.highlight_text
+      ),
+
+    subspecialities,
+
+    ailments:
+      ailments.map(
+        (item) =>
+          item.name
+      ),
+
+    patient_stories:
+      stories,
+  };
+},
+
 
   async remove(id) {
     await db.query('DELETE FROM specialities WHERE id = ?', [id]);
