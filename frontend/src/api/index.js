@@ -8,3 +8,5 @@ export { default as healthLibraryApi } from './healthLibrary';
 export { default as storiesApi } from './stories';
 export { default as blogsApi } from './blogs';
 export { default as faqsApi } from './faqs';
+export { default as partnersApi } from './partners';
+export { default as settingsApi } from './settings';

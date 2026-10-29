@@ -23,7 +23,33 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 
 const app = express();
 
-app.use(cors());
+ app.use(cors());
+
+app.use(
+  cors({
+    origin: [
+
+       // Local development
+      "http://localhost:5173", // Admin frontend
+      "http://localhost:5174", // User frontend
+      "http://localhost:5175", // User frontend alternate port
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:5174",
+      "http://127.0.0.1:5175",
+
+      // Production websites
+      "https://akesoglobal.com",
+      "https://www.akesoglobal.com",
+      "https://admin.akesoglobal.com",
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
+  })
+);
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -40,29 +66,38 @@ app.use(
 
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/specialities', specialityRoutes);
-// app.use('/api/our-stories', storyRoutes);
+ app.use('/api/our-stories', storyRoutes);
 app.get(
   '/api/public/our-stories',
   require('./controllers/story.controller').list
 );
-
+app.get('/api/public/partners', require('./controllers/partners.controller').list);
 app.get('/api/public/editorial/:kind', (req,res,next) => { req.query.public='1'; require('./controllers/editorial.controller').list(req,res,next); });
 app.get('/api/public/editorial/:kind/:id', (req,res,next) => { req.query.public='1'; require('./controllers/editorial.controller').getOne(req,res,next); });
+app.get('/api/public/settings', require('./controllers/settings.controller').get);
 app.use('/api/faqs', faqRoutes);
+
+app.use('/api/health-library', healthLibraryRoutes);
+
+ app.use(
+  "/api/patient-care",
+   require("./routes/patientCare.routes")
+ );
 
 app.use('/api', authMiddleware);
 app.use('/api/hospitals', hospitalRoutes);
-
-// app.use('/api/specialities', specialityRoutes);
+app.use('/api/partners', require('./routes/partners.routes'));
+app.use('/api/settings', require('./routes/settings.routes'));
+ app.use('/api/specialities', specialityRoutes);
 app.use('/api/services', serviceRoutes);
-// app.use('/api/doctors', doctorRoutes);
-app.use('/api/health-library', healthLibraryRoutes);
+ app.use('/api/doctors', doctorRoutes);
+ app.use('/api/health-library', healthLibraryRoutes);
 app.use('/api/our-stories', storyRoutes);
 
 app.use('/api/blogs', blogRoutes);
 app.use('/api/editorial', editorialRoutes);
 
-// app.use('/api/faqs', faqRoutes);
+ app.use('/api/faqs', faqRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 app.use((req, res) => {
@@ -81,6 +116,7 @@ initDatabase()
       console.log(`Hospital admin API listening on http://localhost:${PORT}`);
     });
   })
+
   .catch((err) => {
     console.error('Failed to initialize database:', err.message);
     process.exit(1);

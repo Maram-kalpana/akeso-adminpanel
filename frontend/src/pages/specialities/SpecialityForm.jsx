@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import Drawer from '../../components/Drawer';
 import ImageUpload from '../../components/ImageUpload';
 import RepeatableList from '../../components/RepeatableList';
@@ -14,8 +16,23 @@ const empty = {
   is_active: true,
   highlights: [''],
   subspecialities: [''],
-  ailments: [''],
+  ailments: '',
 };
+
+const quillModules = {
+  toolbar: [
+    [{ header: [2, 3, false] }],
+    ['bold', 'italic', 'underline'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['link'],
+    ['clean'],
+  ],
+};
+
+// Quill returns this when the editor is empty
+function cleanHtml(html) {
+  return !html || html === '<p><br></p>' ? '' : html;
+}
 
 export default function SpecialityForm({ open, id, onClose, onSaved }) {
   const [form, setForm] = useState(empty);
@@ -34,13 +51,17 @@ export default function SpecialityForm({ open, id, onClose, onSaved }) {
     }
     specialitiesApi.get(id).then((res) => {
       const d = res.data.data;
+      // Old records stored ailments as an array: convert to a bullet list
+      const ailmentsHtml = Array.isArray(d.ailments)
+        ? (d.ailments.length ? `<ul>${d.ailments.map((a) => `<li>${a}</li>`).join('')}</ul>` : '')
+        : (d.ailments || '');
       setForm({
         ...empty,
         ...d,
         is_active: Boolean(d.is_active),
         highlights: d.highlights?.length ? d.highlights : [''],
         subspecialities: d.subspecialities?.length ? d.subspecialities : [''],
-        ailments: d.ailments?.length ? d.ailments : [''],
+        ailments: ailmentsHtml,
       });
       setExisting(mediaUrl(d.about_image));
     });
@@ -64,7 +85,7 @@ export default function SpecialityForm({ open, id, onClose, onSaved }) {
         is_active: form.is_active,
         highlights: form.highlights.filter(Boolean),
         subspecialities: form.subspecialities.filter(Boolean),
-        ailments: form.ailments.filter(Boolean),
+        ailments: cleanHtml(form.ailments),
       }, 'about_image', file);
       if (id) await specialitiesApi.update(id, payload);
       else await specialitiesApi.create(payload);
@@ -95,7 +116,16 @@ export default function SpecialityForm({ open, id, onClose, onSaved }) {
         </div>
         <RepeatableList label="Key highlights" values={form.highlights} onChange={(v) => set('highlights', v)} placeholder="Highlight" />
         <RepeatableList label="Sub specialities" values={form.subspecialities} onChange={(v) => set('subspecialities', v)} placeholder="Sub speciality" />
-        <RepeatableList label="Ailments" values={form.ailments} onChange={(v) => set('ailments', v)} placeholder="Ailment" />
+        <div className="full">
+          <label>Ailments</label>
+          <ReactQuill
+            theme="snow"
+            value={form.ailments}
+            onChange={(v) => set('ailments', v)}
+            modules={quillModules}
+            placeholder="Describe the ailments treated"
+          />
+        </div>
         <label className="check">
           <input type="checkbox" checked={form.is_active} onChange={(e) => set('is_active', e.target.checked)} />
           Active

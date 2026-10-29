@@ -31,10 +31,9 @@ function hashToken(token) {
 }
 
 
-function expiresIn24Hours() {
+function expiresIn30Minutes() {
   return new Date(
-    Date.now() +
-      24 * 60 * 60 * 1000
+    Date.now() + 30 * 60 * 1000
   );
 }
 
@@ -116,8 +115,10 @@ exports.register =
       const tokenHash =
         hashToken(rawToken);
 
+      // const expiresAt =
+      //   expiresIn24Hours();
       const expiresAt =
-        expiresIn24Hours();
+  expiresIn30Minutes();
 
 
       let customerId;
@@ -173,6 +174,45 @@ exports.register =
   };
 
 
+  
+/* =========================================
+   VALIDATE ACTIVATION TOKEN
+========================================= */
+
+exports.validateActivationToken = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+
+    if (typeof token !== "string" || !token.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Activation link is missing or invalid.",
+      });
+    }
+
+    const customer = await Customer.findByActivationToken(
+      hashToken(token.trim())
+    );
+
+    if (!customer || customer.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "This activation link has expired or has already been used.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      valid: true,
+      message: "Activation link is valid.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 /* =========================================
    SET PASSWORD
 ========================================= */
@@ -212,13 +252,20 @@ exports.setPassword =
         );
 
 
-      if (!customer) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "This activation link is invalid or has expired.",
-        });
-      }
+      // if (!customer) {
+      //   return res.status(400).json({
+      //     success: false,
+      //     message:
+      //       "This activation link is invalid or has expired.",
+      //   });
+      // }
+      if (!customer || customer.status !== "pending") {
+  return res.status(400).json({
+    success: false,
+    message:
+      "This activation link has expired or has already been used.",
+  });
+}
 
 
       const passwordHash =
@@ -228,10 +275,21 @@ exports.setPassword =
         );
 
 
-      await Customer.activate({
-        id: customer.id,
-        password: passwordHash,
-      });
+      
+const activated = await Customer.activate({
+  id: customer.id,
+  tokenHash: hashToken(token.trim()),
+  password: passwordHash,
+});
+
+if (!activated) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "This activation link has expired or has already been used.",
+  });
+}
+
 
 
       return res.json({
@@ -414,8 +472,10 @@ exports.forgotPassword =
           tokenHash:
             hashToken(rawToken),
 
+          // expiresAt:
+          //   expiresIn24Hours(),
           expiresAt:
-            expiresIn24Hours(),
+  expiresIn30Minutes(),
         });
 
 
@@ -440,10 +500,39 @@ exports.forgotPassword =
   };
 
 
+  exports.validateResetToken = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+
+    if (typeof token !== "string" || !token.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "This link has expired or has already been used.",
+      });
+    }
+
+    const customer = await Customer.findByResetToken(
+      hashToken(token.trim())
+    );
+
+    if (!customer || customer.status !== "active") {
+      return res.status(400).json({
+        success: false,
+        message: "This link has expired or has already been used.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      valid: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 /* =========================================
    RESET PASSWORD
 ========================================= */
-
 exports.resetPassword =
   async (req, res, next) => {
 
@@ -495,10 +584,20 @@ exports.resetPassword =
         );
 
 
-      await Customer.resetPassword({
-        id: customer.id,
-        password: passwordHash,
-      });
+     
+const updated = await Customer.resetPassword({
+  id: customer.id,
+  tokenHash: hashToken(token.trim()),
+  password: passwordHash,
+});
+
+if (!updated) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "This password reset link has expired or has already been used.",
+  });
+}
 
 
       return res.json({

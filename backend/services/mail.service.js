@@ -4,23 +4,26 @@ const nodemailer =
 require("dotenv").config();
 
 
-const transporter =
-  nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(
-      process.env.SMTP_PORT || 587
-    ),
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
 
-    secure:
-      String(
-        process.env.SMTP_SECURE
-      ) === "true",
+  port: Number(process.env.SMTP_PORT || 587),
 
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+  secure: String(process.env.SMTP_SECURE) === "true",
+
+  requireTLS: true,
+
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+
+  tls: {
+    minVersion: "TLSv1.2",
+    servername: process.env.SMTP_HOST || "smtp.gmail.com",
+  },
+});
+
 
 
 function emailTemplate({
@@ -186,6 +189,34 @@ function emailTemplate({
         </tr>
       </table>
 
+   
+<p
+  style="
+    margin:16px 0 0;
+    font-size:13px;
+    line-height:1.7;
+    color:#667879;
+  "
+>
+  This link is valid for
+  <strong>30 minutes</strong>
+  and can only be used once.
+</p>
+
+<p
+  style="
+    margin:10px 0 0;
+    font-size:13px;
+    line-height:1.7;
+    color:#d62828;
+    font-weight:600;
+  "
+>
+  &#9888; Once this link expires or has been used,
+  it cannot be used again.
+</p>
+
+
 
       <p
         style="
@@ -218,22 +249,6 @@ function emailTemplate({
           ${actionUrl}
         </a>
       </p>
-
-
-      <div
-        style="
-          margin-top:30px;
-          padding:14px 16px;
-          background:#f4f8f8;
-          border-left:3px solid #064B50;
-          color:#667879;
-          font-size:12px;
-          line-height:1.7;
-        "
-      >
-        For your security, this link
-        expires in 24 hours.
-      </div>
 
     </td>
   </tr>

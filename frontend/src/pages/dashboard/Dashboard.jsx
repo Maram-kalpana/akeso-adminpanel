@@ -3,14 +3,14 @@ import { dashboardApi } from '../../api';
 import toast from 'react-hot-toast';
 
 const cards = [
-  ['doctors', 'Doctors'],
-  ['specialities', 'Specialities'],
-  ['services', 'Services'],
-  ['hospitals', 'Hospitals'],
+   ['doctors', 'Doctors'],
+   ['specialities', 'Specialities'],
+   ['services', 'Services'],
+   ['hospitals', 'Hospitals'],
   ['health_library', 'Health Library'],
-  ['our_stories', 'Our Stories'],
-  ['blogs', 'Blogs'],
-  ['faqs', 'FAQs'],
+   ['our_stories', 'Our Stories'],
+   ['blogs', 'Blogs'],
+   ['faqs', 'FAQs'],
 ];
 
 export default function Dashboard() {

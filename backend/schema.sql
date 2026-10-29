@@ -364,3 +364,57 @@ CREATE TABLE IF NOT EXISTS case_studies (
  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
  KEY idx_case_speciality (speciality_id), KEY idx_case_published (is_published,created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Run once in hospital_cms. Existing tables are not modified.
+USE hospital_cms;
+
+CREATE TABLE IF NOT EXISTS patient_profiles (
+ customer_id INT UNSIGNED PRIMARY KEY,
+ patient_number VARCHAR(32) NOT NULL UNIQUE,
+ personal JSON NULL, passport JSON NULL, visa JSON NULL, medical JSON NULL,
+ treatment JSON NULL, hospital JSON NULL, stay JSON NULL, travel JSON NULL,
+ appointments JSON NULL, payments JSON NULL, journey JSON NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ CONSTRAINT fk_patient_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS patient_documents (
+ id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ customer_id INT UNSIGNED NOT NULL,
+ section_id VARCHAR(40) NOT NULL,
+ category VARCHAR(100) NOT NULL,
+ original_name VARCHAR(255) NOT NULL,
+ stored_name VARCHAR(120) NOT NULL UNIQUE,
+ mime_type VARCHAR(120) NOT NULL,
+ file_size INT UNSIGNED NOT NULL,
+ uploaded_by_type ENUM('patient','admin') NOT NULL,
+ uploaded_by_id INT UNSIGNED NOT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ INDEX idx_patient_documents_customer(customer_id),
+ FOREIGN KEY(customer_id) REFERENCES customers(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS patient_activity_logs (
+ id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ customer_id INT UNSIGNED NOT NULL,
+ actor_type ENUM('patient','admin') NOT NULL,
+ actor_id INT UNSIGNED NOT NULL,
+ action VARCHAR(100) NOT NULL,
+ section_id VARCHAR(40) NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ INDEX idx_patient_activity_customer(customer_id),
+ FOREIGN KEY(customer_id) REFERENCES customers(id) ON DELETE CASCADE
+) ENGINE=InnoDB;

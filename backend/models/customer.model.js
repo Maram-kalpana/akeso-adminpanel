@@ -118,11 +118,13 @@ exports.findByActivationToken = async (
 };
 
 
+
 exports.activate = async ({
   id,
+  tokenHash,
   password,
 }) => {
-  await db.query(
+  const [result] = await db.query(
     `
       UPDATE customers
       SET
@@ -132,10 +134,16 @@ exports.activate = async ({
         activation_token_hash = NULL,
         activation_token_expires_at = NULL
       WHERE id = ?
+        AND status = 'pending'
+        AND activation_token_hash = ?
+        AND activation_token_expires_at > NOW()
     `,
-    [password, id]
+    [password, id, tokenHash]
   );
+
+  return result.affectedRows === 1;
 };
+
 
 
 exports.saveResetToken = async ({
@@ -178,11 +186,13 @@ exports.findByResetToken = async (
 };
 
 
+
 exports.resetPassword = async ({
   id,
+  tokenHash,
   password,
 }) => {
-  await db.query(
+  const [result] = await db.query(
     `
       UPDATE customers
       SET
@@ -190,9 +200,14 @@ exports.resetPassword = async ({
         reset_token_hash = NULL,
         reset_token_expires_at = NULL
       WHERE id = ?
+        AND status = 'active'
+        AND reset_token_hash = ?
+        AND reset_token_expires_at > NOW()
     `,
-    [password, id]
+    [password, id, tokenHash]
   );
+
+  return result.affectedRows === 1;
 };
 
 
